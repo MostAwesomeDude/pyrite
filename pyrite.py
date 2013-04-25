@@ -1,3 +1,5 @@
+import sys
+
 from parsley import makeGrammar
 
 g = """
@@ -29,7 +31,10 @@ def makeX(info):
     return "%s - %dx%02d.%s" % (name, season, ep, ext)
 
 def main():
-    pass
+    argv = sys.argv[2:]
+    for name in argv:
+        munged = makeX(Munger(name).tv())
+        print "Old:", name, "New:", munged
 
 if __name__ == "__main__":
     main()
