@@ -1,3 +1,4 @@
+import os.path
 import sys
 
 from parsley import makeGrammar
@@ -33,8 +34,9 @@ def makeX(info):
 def main():
     argv = sys.argv[2:]
     for name in argv:
-        munged = makeX(Munger(name).tv())
-        print "Old:", name, "New:", munged
+        folder, filename = os.path.split(name)
+        munged = makeX(Munger(filename).tv())
+        print "Old:", filename, "New:", munged
 
 if __name__ == "__main__":
     main()
