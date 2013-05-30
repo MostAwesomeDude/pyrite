@@ -41,7 +41,8 @@ just too much.'''
 
 import os.path
 
-import apsw
+# import apsw
+apsw = None
 
 db = "anime.db"
 
