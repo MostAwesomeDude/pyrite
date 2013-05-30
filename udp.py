@@ -35,6 +35,23 @@ import db
 server = "api.anidb.info"
 port = 9000
 
+
+def pack(d):
+    """
+    Pack a dict into a str.
+    """
+
+    return "&".join("%s=%s" % t for t in d.items())
+
+
+def unpack(s):
+    """
+    Unpack a str into a dict.
+    """
+
+    return dict(pair.split("=") for pair in s.split("&"))
+
+
 def s2d(string):
     '''Convenience function. Convert a string to a dictionary.'''
     templ = string.split("&")
