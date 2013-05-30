@@ -28,10 +28,14 @@ import os.path
 from Crypto.Hash import MD4
 
 def ed2k(file):
-    '''Given a file name, return the ED2K hash and size as a tuple.'''
-    '''ED2K is a rudimentary tree hash, with a depth of 1 and a leaf
-    size of 9,728,000 bytes. The hash is MD4, which is not natively
-    available in Python, so I use PyCrypto's version instead.'''
+    """
+    Given a file name, return the ED2K hash and size as a tuple.
+
+    ED2K is a rudimentary tree hash, with a depth of 1 and a leaf size of
+    9,728,000 bytes. The hash is MD4, which is not natively available in
+    Python, so I use PyCrypto's version instead.
+    """
+
     handle = open(file, "rb")
     buf = ''
     hashl = []
