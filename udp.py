@@ -52,15 +52,6 @@ def unpack(s):
     return dict(pair.split("=") for pair in s.split("&"))
 
 
-def s2d(string):
-    '''Convenience function. Convert a string to a dictionary.'''
-    templ = string.split("&")
-    dic = dict()
-    for pair in templ:
-        (key, val) = pair.split("=")
-        dic[key] = val
-    return dic
-
 def udpsock():
     '''Return a new UDP socket. Be careful with this -- we can't have
     too many sockets floating around!'''
@@ -126,7 +117,18 @@ def ping(outbound, inbound):
 
 def login(outbound, inbound, user, passwd):
     '''Start a session. Returns session id on success, None on failure.'''
-    command = "AUTH user=" + user.lower() + "&pass=" + passwd + "&protover=3&client=openanidb&clientver=1"
+
+    data = {
+        "user": user.lower(),
+        "pass": passwd,
+        "protover": 3,
+        "client": "openanidb",
+        "clientver": 1,
+    }
+
+    payload = pack(data)
+    command = "AUTH " + payload
+
     outbound.put(command)
     data = inbound.get()
     (code, data) = data.split(" ", 1)
@@ -151,7 +153,11 @@ def logout(outbound, inbound, session):
     if session == None:
         # Why is sanity checking here? Whatever...
         return False
-    command = "LOGOUT s=" + session
+
+    data = {"s": session}
+    payload = pack(data)
+    command = "LOGOUT " + payload
+
     outbound.put(command)
     data = inbound.get()
     (code, data) = data.split(" ", 1)
@@ -181,18 +187,25 @@ def anime(outbound, inbound, session, aid=0, aname=None, invalidatecache=False):
     elif session == None:
         # If session is empty, then searching the cache is the limit...
         return None
-    # Since ID is more accurate than name, it gets done first...
+
+    data = {"s": session}
+    # Since ID is more accurate than name, it is preferred.
     if aid != 0:
-        command = "ANIME aid=" + str(aid) + "&s=" + session
+        data["aid"] = str(aid)
     else:
-        command = "ANIME aname=" + aname + "&s=" + session
-    ''' I'm gonna rant for a second here.
-    So, the MTU (and max. datagram size) for AniDB is 1400 bytes. This is
-    absolutely insane. Why? Well, first off, the modern stack implementation
-    can send a whole datagram at sizes of 4096 bytes minimum. This means
-    that even if fragmentation occurs, the actual hardware can still buffer
-    this larger packet without problems. Normally, I wouldn't care, but they
-    would rather truncate data than bother trusting IP fragmentation. Sheesh.'''
+        data["aname"] = aname
+
+    payload = pack(data)
+    command = "ANIME " + payload
+
+    # I'm gonna rant for a second here.
+    # So, the MTU (and max. datagram size) for AniDB is 1400 bytes. This is
+    # absolutely insane. Why? Well, first off, the modern stack implementation
+    # can send a whole datagram at sizes of 4096 bytes minimum. This means
+    # that even if fragmentation occurs, the actual hardware can still buffer
+    # this larger packet without problems. Normally, I wouldn't care, but they
+    # would rather truncate data than bother trusting IP fragmentation.
+    # Sheesh.
     outbound.put(command)
     data = inbound.get()
     data = unamp(data)
@@ -228,12 +241,18 @@ def episode(outbound, inbound, session, eid=0, aid=(), invalidatecache=False):
     elif session == None:
         # If session is empty, then searching the cache is the limit...
         return None
-    # Since ID is more accurate than name, it gets done first...
+
+    data = {"s": session}
+    # Since ID is more accurate than name, it is preferred.
     if eid != 0:
-        command = "EPISODE eid=" + str(eid) + "&s=" + session
+        data["eid"] = eid
     else:
-        # Sanest way to pass epno
-        command = "EPISODE aid=" + str(aid[0]) + "&epno=" + str(aid[1]).lstrip("0") + "&s=" + session
+        data["aid"] = str(aid[0])
+        data["epno"] = str(aid[1]).lstrip("0")
+
+    payload = pack(data)
+    command = "EPISODE " + payload
+
     outbound.put(command)
     data = inbound.get()
     data = unamp(data)
@@ -268,11 +287,17 @@ def file(outbound, inbound, session, fid=0, file=(), invalidatecache=False):
     elif session == None:
         # If session is empty, then searching the cache is the limit...
         return None
+
+    data = {"s": session}
     if fid != 0:
-        command = "FILE fid=" + str(fid) + "&s=" + session
+        data["fid"] = fid
     else:
-        command = "FILE size=" + str(file[1]) + "&ed2k=" + file[0].lower() + "&s=" + session
-        print command
+        data["ed2k"] = str(file[0].lower())
+        data["size"] = str(file[1])
+
+    payload = pack(data)
+    command = "FILE " + payload
+
     outbound.put(command)
     data = inbound.get()
     data = unamp(data)
@@ -293,7 +318,14 @@ def file(outbound, inbound, session, fid=0, file=(), invalidatecache=False):
 def encoding(outbound, inbound, session):
     '''Sets session encoding. There is no reason to change it away from
     UTF8 Unicode, so don't touch!'''
-    command = "ENCODING name=UTF8&s=" + session
+
+    data = {
+        "s": session,
+        "name": "UTF8",
+    }
+    payload = pack(data)
+    command = "ENCODING " + payload
+
     outbound.put(command)
     code = inbound.get()[0:3]
     if code == "219":
