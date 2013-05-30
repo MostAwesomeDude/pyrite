@@ -23,7 +23,6 @@
 
 import Queue
 import sys
-import time
 import wx
 
 import config
@@ -119,7 +118,7 @@ class oaframe(wx.Frame):
         self.localdb = wx.Panel(self.notebook1, -1)
         self.anime = wx.Panel(self.notebook1, -1)
         self.main = wx.Panel(self.notebook1, -1)
-        
+
         # Menu Bar
         self.menubar = wx.MenuBar()
         self.SetMenuBar(self.menubar)
@@ -175,7 +174,7 @@ class oaframe(wx.Frame):
         # Tree events
         self.Bind(wx.EVT_TREE_ITEM_RIGHT_CLICK, self.gui_tree_rc, self.tree)
         self.Bind(wx.EVT_CLOSE, self.quit, self)
-        
+
         # This sets up all the global shit we might need
         # UDP socket (the one and only)
         # self.sock = udp.udpsock()
