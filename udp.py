@@ -36,14 +36,6 @@ server = "api.anidb.info"
 port = 9000
 
 
-def pack(d):
-    """
-    Pack a dict into a str.
-    """
-
-    return "&".join("%s=%s" % t for t in d.items())
-
-
 def unpack(s):
     """
     Unpack a str into a dict.
@@ -99,21 +91,6 @@ def unicodify(l):
         if type(l[i]) == str:
             l[i] = l[i].decode("utf8")
     return l
-
-def ping(outbound, inbound):
-    '''Ping the database. We do not need a login for this.
-    Returns True on success, otherwise False.'''
-    # sock.sendto("PING", (server, port))
-    # data = sock.recv(256)
-    outbound.put("PING")
-    data = inbound.get()
-    (code, data) = data.split(" ",1)
-    if code == "300":
-        # PONG!
-        return True
-    else:
-        # No pong? Doesn't matter why, just that it failed...
-        return False
 
 def login(outbound, inbound, user, passwd):
     '''Start a session. Returns session id on success, None on failure.'''

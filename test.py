@@ -1,7 +1,8 @@
 from unittest import TestCase
 
 from pyrite import Munger
-from udp import pack, unpack
+from udp import unpack
+from anidb import pack
 
 
 class TestPack(TestCase):

@@ -2,6 +2,32 @@ from twisted.internet.protocol import DatagramProtocol
 from twisted.internet.defer import Deferred
 
 
+def pack(d):
+    """
+    Pack a dict into a str.
+    """
+
+    return "&".join("%s=%s" % t for t in d.items())
+
+
+def code(s):
+    """
+    Get the success code for a reply.
+    """
+
+    return s.split(" ")[0]
+
+
+def request(s, d=None):
+    """
+    Make a request from a request type and dict of arguments.
+    """
+
+    if d:
+        return "%s %s" % (s, pack(d))
+    return s
+
+
 class AniDBProtocol(DatagramProtocol):
     """
     A protocol for communicating with AniDB.
@@ -52,6 +78,20 @@ class AniDBProtocol(DatagramProtocol):
         self.write("PING")
         self.next_state = "pong"
         return self.d
+
+    def login(self, username, password):
+        self.d = Deferred()
+
+        data = {
+            "user": username,
+            "pass": password,
+            "protover": 3,
+            "client": "openanidb",
+            "clientver": 2,
+        }
+
+        payload = request("AUTH", data)
+        self.write(payload)
 
 
 def makeProtocol(reactor):
