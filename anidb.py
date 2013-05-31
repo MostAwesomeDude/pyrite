@@ -4,13 +4,15 @@ from twisted.internet.defer import Deferred
 
 class AniDBProtocol(DatagramProtocol):
     """
-    A simple protocol for communicating with AniDB.
+    A protocol for communicating with AniDB.
     """
 
     d = None
+    timestamp = 0
     next_state = "default"
 
-    def __init__(self, address):
+    def __init__(self, reactor, address):
+        self.reactor = reactor
         self.address = address
 
     def startProtocol(self):
@@ -27,9 +29,27 @@ class AniDBProtocol(DatagramProtocol):
         print data
         self.d.callback(data.startswith("300"))
 
+    def write(self, packet):
+        """
+        Write a packet of data, eventually.
+        """
+
+        current = self.reactor.seconds()
+        diff = current - self.timestamp
+
+        if diff >= 4:
+            # We're good to send right now.
+            self.transport.write(packet)
+            self.timestamp = current
+        else:
+            # We'll send in the future, when it's safe.
+            target = 4 - diff
+            self.reactor.callLater(target, self.transport.write, packet)
+            self.timestamp = current + target
+
     def ping(self):
         self.d = Deferred()
-        self.transport.write("PING")
+        self.write("PING")
         self.next_state = "pong"
         return self.d
 
@@ -39,9 +59,8 @@ def makeProtocol(reactor):
 
     @d.addCallback
     def cb(address):
-        port = 9000
-        protocol = AniDBProtocol(address)
-        reactor.listenUDP(port, protocol)
+        protocol = AniDBProtocol(reactor, address)
+        reactor.listenUDP(0, protocol)
         return protocol
 
     return d
