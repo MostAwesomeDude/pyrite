@@ -92,61 +92,6 @@ def unicodify(l):
             l[i] = l[i].decode("utf8")
     return l
 
-def login(outbound, inbound, user, passwd):
-    '''Start a session. Returns session id on success, None on failure.'''
-
-    data = {
-        "user": user.lower(),
-        "pass": passwd,
-        "protover": 3,
-        "client": "openanidb",
-        "clientver": 1,
-    }
-
-    payload = pack(data)
-    command = "AUTH " + payload
-
-    outbound.put(command)
-    data = inbound.get()
-    (code, data) = data.split(" ", 1)
-    if code == "200":
-        # Logged in, yay.
-        (retval, trash) = data.split(" ", 1)
-        return retval
-    elif code == "500":
-        # Failed...
-        return False
-    elif code == "201":
-        # New version available; FIXME: make this apparent in the retval
-        (retval, trash) = data.split(" ", 1)
-        return retval
-    else:
-        # Some other code. Not important right now
-        # FIXME: implement all other codes!
-        return None
-
-def logout(outbound, inbound, session):
-    '''End a session.'''
-    if session == None:
-        # Why is sanity checking here? Whatever...
-        return False
-
-    data = {"s": session}
-    payload = pack(data)
-    command = "LOGOUT " + payload
-
-    outbound.put(command)
-    data = inbound.get()
-    (code, data) = data.split(" ", 1)
-    if code == "203":
-        # Logged out successfully.
-        return True
-    elif code == "403":
-        # Well, the session wasn't good, but the end result is the same, I guess.
-        return True
-    else:
-        return False
-
 def anime(outbound, inbound, session, aid=0, aname=None, invalidatecache=False):
     '''Retrieves data for an anime. Does some caching.'''
     if aid == 0 and aname == None:

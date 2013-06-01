@@ -1,5 +1,4 @@
 from twisted.internet.protocol import DatagramProtocol
-from twisted.internet.defer import Deferred
 
 
 def pack(d):
@@ -8,14 +7,6 @@ def pack(d):
     """
 
     return "&".join("%s=%s" % t for t in d.items())
-
-
-def code(s):
-    """
-    Get the success code for a reply.
-    """
-
-    return s.split(" ")[0]
 
 
 def request(s, d=None):
@@ -33,27 +24,40 @@ class AniDBProtocol(DatagramProtocol):
     A protocol for communicating with AniDB.
     """
 
-    d = None
+    session = None
     timestamp = 0
-    next_state = "default"
 
     def __init__(self, reactor, address):
         self.reactor = reactor
         self.address = address
 
+        self.lookups = {}
+
     def startProtocol(self):
         self.transport.connect(self.address, 9000)
 
-    def datagramReceived(self, data, remote):
-        handler = getattr(self, "recv_%s" % self.next_state)
-        handler(data)
+    def datagramReceived(self, packet, remote):
+        code, data = packet.split(" ", 1)
+        code = int(code)
 
-    def recv_default(self, data):
-        print data
-
-    def recv_pong(self, data):
-        print data
-        self.d.callback(data.startswith("300"))
+        if False:
+            pass
+        elif code == 200 or code == 201:
+            # LOGIN ACCEPTED
+            session, stuff = data.split(" ", 1)
+            self.session = session
+        elif code == 203 or code == 403:
+            # LOGGED OUT, NOT LOGGED IN
+            self.session = None
+        elif code == 300:
+            # PONG
+            pass
+        elif code == 500:
+            # LOGIN FAILED
+            raise Exception("Login failed")
+        else:
+            print packet
+            raise Exception(packet)
 
     def write(self, packet):
         """
@@ -74,14 +78,9 @@ class AniDBProtocol(DatagramProtocol):
             self.timestamp = current + target
 
     def ping(self):
-        self.d = Deferred()
         self.write("PING")
-        self.next_state = "pong"
-        return self.d
 
     def login(self, username, password):
-        self.d = Deferred()
-
         data = {
             "user": username,
             "pass": password,
@@ -92,6 +91,11 @@ class AniDBProtocol(DatagramProtocol):
 
         payload = request("AUTH", data)
         self.write(payload)
+
+    def logout(self):
+        if self.session:
+            payload = request("LOGOUT", {"s": self.session})
+            self.write(payload)
 
 
 def makeProtocol(reactor):
