@@ -1,4 +1,7 @@
+from datetime import timedelta
+
 from twisted.internet.protocol import DatagramProtocol
+from twisted.python import log
 
 
 def pack(d):
@@ -46,15 +49,42 @@ class AniDBProtocol(DatagramProtocol):
             # LOGIN ACCEPTED
             session, stuff = data.split(" ", 1)
             self.session = session
+
+            log.msg("Logged in; session %s" % session)
+
+            # Immediately after logging in, set the encoding for the session,
+            # and get some information from the server.
+            self.encoding()
+            self.version()
+            self.uptime()
         elif code == 203 or code == 403:
             # LOGGED OUT, NOT LOGGED IN
             self.session = None
+
+            log.msg("Logged out")
+        elif code == 208:
+            # UPTIME
+            stuff, uptime = data.split(" ", 1)
+            uptime = timedelta(milliseconds=int(uptime))
+
+            log.msg("Server uptime: %s" % uptime)
+        elif code == 219:
+            # ENCODING CHANGED
+            pass
         elif code == 300:
             # PONG
             pass
         elif code == 500:
             # LOGIN FAILED
             raise Exception("Login failed")
+        elif code == 519:
+            # ENCODING NOT SUPPORTED
+            pass
+        elif code == 998:
+            # VERSION
+            stuff, version = data.split(" ", 1)
+
+            log.msg("Server version: %s" % version)
         else:
             print packet
             raise Exception(packet)
@@ -95,6 +125,23 @@ class AniDBProtocol(DatagramProtocol):
     def logout(self):
         if self.session:
             payload = request("LOGOUT", {"s": self.session})
+            self.write(payload)
+
+    def encoding(self):
+        data = {
+            "s": self.session,
+            "name": "UTF8",
+        }
+        payload = request("ENCODING", data)
+        self.write(payload)
+
+    def version(self):
+        payload = request("VERSION")
+        self.write(payload)
+
+    def uptime(self):
+        if self.session:
+            payload = request("UPTIME", {"s": self.session})
             self.write(payload)
 
 

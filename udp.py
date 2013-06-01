@@ -236,21 +236,3 @@ def file(outbound, inbound, session, fid=0, file=(), invalidatecache=False):
     else:
         # FIXME: unsupported return code.
         return None
-
-def encoding(outbound, inbound, session):
-    '''Sets session encoding. There is no reason to change it away from
-    UTF8 Unicode, so don't touch!'''
-
-    data = {
-        "s": session,
-        "name": "UTF8",
-    }
-    payload = pack(data)
-    command = "ENCODING " + payload
-
-    outbound.put(command)
-    code = inbound.get()[0:3]
-    if code == "219":
-        return True
-    else:
-        return False
