@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from twisted.internet.defer import Deferred
 from twisted.internet.protocol import DatagramProtocol
 from twisted.python import log
 
@@ -71,8 +72,15 @@ class AniDBProtocol(DatagramProtocol):
         elif code == 219:
             # ENCODING CHANGED
             pass
+        elif code == 220:
+            # FILE
+            print data
+            pass
         elif code == 300:
             # PONG
+            pass
+        elif code == 320:
+            # NO SUCH FILE
             pass
         elif code == 500:
             # LOGIN FAILED
@@ -143,6 +151,23 @@ class AniDBProtocol(DatagramProtocol):
         if self.session:
             payload = request("UPTIME", {"s": self.session})
             self.write(payload)
+
+    def lookup(self, size, ed2k):
+        d = Deferred()
+        self.lookups[size, ed2k] = d
+
+        data = {
+            "ed2k": ed2k,
+            "size": size,
+            "amask": "a020a040",
+            "fmask": "00a0000000",
+            "s": self.session,
+        }
+
+        payload = request("FILE", data)
+        self.write(payload)
+
+        return d
 
 
 def makeProtocol(reactor):
