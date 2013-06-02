@@ -100,35 +100,6 @@ class AniDBProtocol(DatagramProtocol):
         # Lock--
         self._lock.release()
 
-        return
-
-        if False:
-            pass
-        elif code == 203 or code == 403:
-            # LOGGED OUT, NOT LOGGED IN
-            self.session = None
-
-            log.msg("Logged out")
-        elif code == 220:
-            # FILE
-            print data
-            pass
-        elif code == 300:
-            # PONG
-            pass
-        elif code == 320:
-            # NO SUCH FILE
-            pass
-        elif code == 998:
-            # VERSION
-            print data
-            stuff, version = data.split("\n", 1)
-
-            log.msg("Server version: %s" % version)
-        else:
-            print packet
-            raise Exception(packet)
-
     def ds(self):
         d = Deferred()
         d.addCallback(standard_errors)
@@ -229,7 +200,23 @@ class AniDBProtocol(DatagramProtocol):
         payload = request("VERSION")
         self.write(payload)
 
-        return self.ds()
+        d = self.ds()
+
+        @d.addCallback
+        def check(t):
+            code, data = t
+
+            if code == 998:
+                # VERSION
+                stuff, version = data.split("\n", 1)
+
+                log.msg("Server version: %s" % version)
+                return version
+            else:
+                raise Exception("Unexpected return code for version: %d (%s)"
+                                % t)
+
+        return d
 
     def uptime(self):
         if not self.session:
@@ -262,15 +249,40 @@ class AniDBProtocol(DatagramProtocol):
         data = {
             "ed2k": ed2k,
             "size": size,
-            "amask": "a020a040",
-            "fmask": "00a0000000",
+            "amask": "c020a040",
+            "fmask": "00c0000000",
             "s": self.session,
         }
 
         payload = request("FILE", data)
         self.write(payload)
 
-        return self.ds()
+        d = self.ds()
+
+        @d.addCallback
+        def check(t):
+            code, data = t
+
+            if code == 220:
+                # FILE
+                fragments = data.split("\n")[1].split("|")
+                keys = [
+                    "fid",
+                    "size",
+                    "ed2k",
+                    "total",
+                    "highest",
+                    "series",
+                    "current",
+                    "title",
+                    "group",
+                ]
+                return dict(zip(keys, fragments))
+            elif code == 320:
+                # NO SUCH FILE
+                raise Exception("No such file")
+
+        return d
 
 
 def makeProtocol(reactor):
