@@ -27,7 +27,7 @@ import os.path
 
 from Crypto.Hash import MD4
 
-def ed2k(file):
+def ed2k(path):
     """
     Given a file name, return the ED2K hash and size as a tuple.
 
@@ -36,7 +36,7 @@ def ed2k(file):
     Python, so I use PyCrypto's version instead.
     """
 
-    handle = open(file, "rb")
+    handle = open(path, "rb")
     buf = ''
     hashl = []
     while True:
@@ -45,4 +45,5 @@ def ed2k(file):
             break
         hashl.append(MD4.new(buf).digest())
     handle.close()
-    return (MD4.new(''.join(hashl)).hexdigest(), os.path.getsize(file))
+    hashed = MD4.new(''.join(hashl)).hexdigest()
+    return os.path.getsize(path), hashed
