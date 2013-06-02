@@ -4,6 +4,14 @@ from twisted.internet.defer import Deferred
 from twisted.internet.protocol import DatagramProtocol
 from twisted.python import log
 
+class Log(object):
+
+    @staticmethod
+    def msg(s):
+        print repr(s)
+
+log = Log()
+
 
 def pack(d):
     """
@@ -19,7 +27,7 @@ def request(s, d=None):
     """
 
     if d:
-        return "%s %s" % (s, pack(d))
+        return "%s %s\n" % (s, pack(d))
     return s
 
 
@@ -41,8 +49,11 @@ class AniDBProtocol(DatagramProtocol):
         self.transport.connect(self.address, 9000)
 
     def datagramReceived(self, packet, remote):
+        log.msg("< %r" % packet)
+
         code, data = packet.split(" ", 1)
         code = int(code)
+        data = data.strip()
 
         if False:
             pass
@@ -65,7 +76,8 @@ class AniDBProtocol(DatagramProtocol):
             log.msg("Logged out")
         elif code == 208:
             # UPTIME
-            stuff, uptime = data.split(" ", 1)
+            print data
+            stuff, uptime = data.split("\n", 1)
             uptime = timedelta(milliseconds=int(uptime))
 
             log.msg("Server uptime: %s" % uptime)
@@ -90,7 +102,8 @@ class AniDBProtocol(DatagramProtocol):
             pass
         elif code == 998:
             # VERSION
-            stuff, version = data.split(" ", 1)
+            print data
+            stuff, version = data.split("\n", 1)
 
             log.msg("Server version: %s" % version)
         else:
@@ -101,6 +114,8 @@ class AniDBProtocol(DatagramProtocol):
         """
         Write a packet of data, eventually.
         """
+
+        log.msg("> %r" % packet)
 
         current = self.reactor.seconds()
         diff = current - self.timestamp
