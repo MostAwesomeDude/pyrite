@@ -55,6 +55,13 @@ def request(s, d=None):
     return s
 
 
+def postprocess(packet):
+    code, data = packet.split(" ", 1)
+    code = int(code)
+    data = data.strip()
+    return code, data
+
+
 class AniDBProtocol(DatagramProtocol):
     """
     A protocol for communicating with AniDB.
@@ -78,16 +85,12 @@ class AniDBProtocol(DatagramProtocol):
         log.msg("< %r" % packet)
 
         d = self._ds.popleft()
-        d.callback(packet)
+        d.callback(postprocess(packet))
 
         # Lock--
         self._lock.release()
 
         return
-
-        code, data = packet.split(" ", 1)
-        code = int(code)
-        data = data.strip()
 
         if False:
             pass
@@ -144,16 +147,25 @@ class AniDBProtocol(DatagramProtocol):
             print packet
             raise Exception(packet)
 
+    def ds(self):
+        d = Deferred()
+        self._ds.append(d)
+
+        return d
+
     def write(self, packet):
         """
         Write a packet of data, eventually.
         """
 
-        log.msg("> %r" % packet)
-
         # Lock++
         d = self._lock.acquire()
-        d.addCallback(lambda lock: self.transport.write(packet))
+        @d.addCallback
+        def cb(lock):
+            log.msg("> %r" % packet)
+            self.transport.write(packet)
+
+        # XXX set timeout on d
 
         return d
 
@@ -161,10 +173,7 @@ class AniDBProtocol(DatagramProtocol):
         payload = request("PING")
         self.write(payload)
 
-        d = Deferred()
-        self._ds.append(d)
-
-        return d
+        return self.ds()
 
     def login(self, username, password):
         data = {
@@ -177,6 +186,8 @@ class AniDBProtocol(DatagramProtocol):
 
         payload = request("AUTH", data)
         self.write(payload)
+
+        return self.ds()
 
     def logout(self):
         if self.session:
@@ -195,15 +206,14 @@ class AniDBProtocol(DatagramProtocol):
         payload = request("VERSION")
         self.write(payload)
 
+        return self.ds()
+
     def uptime(self):
         if self.session:
             payload = request("UPTIME", {"s": self.session})
             self.write(payload)
 
     def lookup(self, size, ed2k):
-        d = Deferred()
-        self.lookups[size, ed2k] = d
-
         data = {
             "ed2k": ed2k,
             "size": size,
@@ -215,7 +225,7 @@ class AniDBProtocol(DatagramProtocol):
         payload = request("FILE", data)
         self.write(payload)
 
-        return d
+        return self.ds()
 
 
 def makeProtocol(reactor):
