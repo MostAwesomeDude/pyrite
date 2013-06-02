@@ -1,7 +1,7 @@
 from collections import deque
 from datetime import timedelta
 
-from twisted.internet.defer import Deferred, DeferredLock
+from twisted.internet.defer import Deferred, DeferredLock, fail
 from twisted.internet.protocol import DatagramProtocol
 from twisted.python import log
 
@@ -66,6 +66,7 @@ def standard_errors(t):
     code, data = t
 
     if code == 555:
+        # BANNED
         reason = data.split("\n")[1].strip()
         raise Exception("Banned: %s" % reason)
 
@@ -103,33 +104,11 @@ class AniDBProtocol(DatagramProtocol):
 
         if False:
             pass
-        elif code == 200 or code == 201:
-            # LOGIN ACCEPTED
-            session, stuff = data.split(" ", 1)
-            self.session = session
-
-            log.msg("Logged in; session %s" % session)
-
-            # Immediately after logging in, set the encoding for the session,
-            # and get some information from the server.
-            self.encoding()
-            self.version()
-            self.uptime()
         elif code == 203 or code == 403:
             # LOGGED OUT, NOT LOGGED IN
             self.session = None
 
             log.msg("Logged out")
-        elif code == 208:
-            # UPTIME
-            print data
-            stuff, uptime = data.split("\n", 1)
-            uptime = timedelta(milliseconds=int(uptime))
-
-            log.msg("Server uptime: %s" % uptime)
-        elif code == 219:
-            # ENCODING CHANGED
-            pass
         elif code == 220:
             # FILE
             print data
@@ -139,12 +118,6 @@ class AniDBProtocol(DatagramProtocol):
             pass
         elif code == 320:
             # NO SUCH FILE
-            pass
-        elif code == 500:
-            # LOGIN FAILED
-            raise Exception("Login failed")
-        elif code == 519:
-            # ENCODING NOT SUPPORTED
             pass
         elif code == 998:
             # VERSION
@@ -198,12 +171,34 @@ class AniDBProtocol(DatagramProtocol):
         payload = request("AUTH", data)
         self.write(payload)
 
-        return self.ds()
+        d = self.ds()
+
+        @d.addCallback
+        def check(t):
+            code, data = t
+
+            if code == 200 or code == 201:
+                # LOGIN ACCEPTED
+                session, stuff = data.split(" ", 1)
+                self.session = session
+
+                log.msg("Logged in; session %s" % session)
+            elif code == 500:
+                # LOGIN FAILED
+                raise Exception("Login failed")
+
+            return self.session
+
+        return d
 
     def logout(self):
-        if self.session:
-            payload = request("LOGOUT", {"s": self.session})
-            self.write(payload)
+        if not self.session:
+            return fail("Already logged out.")
+
+        payload = request("LOGOUT", {"s": self.session})
+        self.write(payload)
+
+        return self.ds()
 
     def encoding(self):
         data = {
@@ -213,6 +208,23 @@ class AniDBProtocol(DatagramProtocol):
         payload = request("ENCODING", data)
         self.write(payload)
 
+        d = self.ds()
+
+        @d.addCallback
+        def check(t):
+            code, data = t
+
+            if code == 219:
+                # ENCODING CHANGED
+                pass
+            elif code == 519:
+                # ENCODING NOT SUPPORTED
+                raise Exception("UTF-8 encoding not supported!?")
+
+            return "UTF8"
+
+        return d
+
     def version(self):
         payload = request("VERSION")
         self.write(payload)
@@ -220,9 +232,31 @@ class AniDBProtocol(DatagramProtocol):
         return self.ds()
 
     def uptime(self):
-        if self.session:
-            payload = request("UPTIME", {"s": self.session})
-            self.write(payload)
+        if not self.session:
+            return fail("Log in before checking uptime.")
+
+        payload = request("UPTIME", {"s": self.session})
+        self.write(payload)
+
+        d = self.ds()
+
+        @d.addCallback
+        def check(t):
+            code, data = t
+
+            if code == 208:
+                # UPTIME
+                stuff, uptime = data.split("\n", 1)
+                uptime = timedelta(milliseconds=int(uptime))
+
+                log.msg("Server uptime: %s" % uptime)
+
+                return uptime
+            else:
+                raise Exception("Unexpected return code for uptime: %d (%s)" %
+                                t)
+
+        return d
 
     def lookup(self, size, ed2k):
         data = {
