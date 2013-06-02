@@ -62,6 +62,15 @@ def postprocess(packet):
     return code, data
 
 
+def standard_errors(t):
+    code, data = t
+
+    if code == 555:
+        reason = data.split("\n")[1].strip()
+        raise Exception("Banned: %s" % reason)
+
+    return code, data
+
 class AniDBProtocol(DatagramProtocol):
     """
     A protocol for communicating with AniDB.
@@ -149,6 +158,8 @@ class AniDBProtocol(DatagramProtocol):
 
     def ds(self):
         d = Deferred()
+        d.addCallback(standard_errors)
+
         self._ds.append(d)
 
         return d
