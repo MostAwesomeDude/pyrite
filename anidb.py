@@ -1,6 +1,7 @@
+from collections import deque
 from datetime import timedelta
 
-from twisted.internet.defer import Deferred
+from twisted.internet.defer import Deferred, DeferredLock
 from twisted.internet.protocol import DatagramProtocol
 from twisted.python import log
 
@@ -11,6 +12,29 @@ class Log(object):
         print repr(s)
 
 log = Log()
+
+
+class Trickling(object):
+
+    def __init__(self, reactor, transport):
+        self.reactor = reactor
+        self.transport = transport
+
+        self.timestamp = reactor.seconds()
+
+    def write(self, packet):
+        current = self.reactor.seconds()
+        diff = current - self.timestamp
+
+        if diff >= 4:
+            # We're good to send right now.
+            self.transport.write(packet)
+            self.timestamp = current
+        else:
+            # We'll send in the future, when it's safe.
+            target = 4 - diff
+            self.reactor.callLater(target, self.transport.write, packet)
+            self.timestamp = current + target
 
 
 def pack(d):
@@ -43,13 +67,23 @@ class AniDBProtocol(DatagramProtocol):
         self.reactor = reactor
         self.address = address
 
-        self.lookups = {}
+        self._ds = deque()
+        self._lock = DeferredLock()
 
     def startProtocol(self):
         self.transport.connect(self.address, 9000)
+        self.transport = Trickling(self.reactor, self.transport)
 
     def datagramReceived(self, packet, remote):
         log.msg("< %r" % packet)
+
+        d = self._ds.popleft()
+        d.callback(packet)
+
+        # Lock--
+        self._lock.release()
+
+        return
 
         code, data = packet.split(" ", 1)
         code = int(code)
@@ -117,21 +151,20 @@ class AniDBProtocol(DatagramProtocol):
 
         log.msg("> %r" % packet)
 
-        current = self.reactor.seconds()
-        diff = current - self.timestamp
+        # Lock++
+        d = self._lock.acquire()
+        d.addCallback(lambda lock: self.transport.write(packet))
 
-        if diff >= 4:
-            # We're good to send right now.
-            self.transport.write(packet)
-            self.timestamp = current
-        else:
-            # We'll send in the future, when it's safe.
-            target = 4 - diff
-            self.reactor.callLater(target, self.transport.write, packet)
-            self.timestamp = current + target
+        return d
 
     def ping(self):
-        self.write("PING")
+        payload = request("PING")
+        self.write(payload)
+
+        d = Deferred()
+        self._ds.append(d)
+
+        return d
 
     def login(self, username, password):
         data = {
