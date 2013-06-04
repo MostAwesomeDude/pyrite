@@ -19,24 +19,20 @@
 #    59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.             #
 ############################################################################
 
-'''This library contains utility hashes. Some of these, like TTH and ED2K,
-are mine, but most of these are courtesy of the Python Cryptography Toolkit,
-and any such bugs are their problem.'''
-
-import os.path
+"""
+An implementation of ED2K.
+"""
 
 from Crypto.Hash import MD4
 
-def ed2k(path):
-    """
-    Given a file name, return the ED2K hash and size as a tuple.
 
+def ed2k(handle):
+    """
     ED2K is a rudimentary tree hash, with a depth of 1 and a leaf size of
     9,728,000 bytes. The hash is MD4, which is not natively available in
     Python, so I use PyCrypto's version instead.
     """
 
-    handle = open(path, "rb")
     buf = ''
     hashl = []
     while True:
@@ -44,6 +40,13 @@ def ed2k(path):
         if buf == '':
             break
         hashl.append(MD4.new(buf).digest())
-    handle.close()
     hashed = MD4.new(''.join(hashl)).hexdigest()
-    return os.path.getsize(path), hashed
+    return hashed
+
+
+def size_and_hash(filepath):
+    size = filepath.getsize()
+    handle = filepath.open("rb")
+    hash = ed2k(handle)
+    handle.close()
+    return size, hash
