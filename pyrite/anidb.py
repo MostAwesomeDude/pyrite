@@ -5,14 +5,6 @@ from twisted.internet.defer import Deferred, DeferredLock, fail
 from twisted.internet.protocol import DatagramProtocol
 from twisted.python import log
 
-class Log(object):
-
-    @staticmethod
-    def msg(s):
-        print repr(s)
-
-log = Log()
-
 
 class Trickling(object):
 
@@ -295,3 +287,28 @@ def makeProtocol(reactor):
         return protocol
 
     return d
+
+
+def rename(source, target):
+    """
+    Move a file from one location to another, if they aren't the same path.
+    """
+
+    if source != target:
+        if not target.parent().exists():
+            target.parent().makedirs()
+        source.moveTo(target)
+        return True
+
+    return False
+
+
+def make_target(filepath, data, s):
+    """
+    Extend a filepath with some data and a formatting string.
+    """
+
+    formatted = s % data
+    for segment in formatted.split("/"):
+        filepath = filepath.child(segment)
+    return filepath
