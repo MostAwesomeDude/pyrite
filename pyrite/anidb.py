@@ -277,7 +277,7 @@ class AniDBProtocol(DatagramProtocol):
         return d
 
 
-def makeProtocol(reactor):
+def make_protocol(reactor):
     d = reactor.resolve("api.anidb.info")
 
     @d.addCallback
@@ -296,8 +296,10 @@ def rename(source, target):
 
     if source != target:
         if not target.parent().exists():
-            target.parent().makedirs()
-        source.moveTo(target)
+            pass
+            # target.parent().makedirs()
+        # source.moveTo(target)
+        log.msg("Would move %s to %s" % (source, target))
         return True
 
     return False
@@ -308,7 +310,7 @@ def make_target(filepath, data, s):
     Extend a filepath with some data and a formatting string.
     """
 
-    formatted = s % data
+    formatted = s.format(**data)
     for segment in formatted.split("/"):
         filepath = filepath.child(segment)
     return filepath
