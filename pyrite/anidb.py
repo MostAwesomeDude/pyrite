@@ -298,9 +298,9 @@ def rename(source, target):
     if source != target:
         if not target.parent().exists():
             pass
-            # target.parent().makedirs()
-        # source.moveTo(target)
-        log.msg("Would move %s to %s" % (source, target))
+            target.parent().makedirs()
+        source.moveTo(target)
+        log.msg("Moving %s to %s" % (source, target))
         return True
 
     return False
