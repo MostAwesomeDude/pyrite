@@ -47,19 +47,19 @@ def teardown(protocol):
     return protocol.logout()
 
 
+@inlineCallbacks
 def main(reactor, username, password, s, source, dest):
     source = FilePath(source)
     dest = FilePath(dest)
 
-    d = setup(reactor, username, password)
+    protocol = yield setup(reactor, username, password)
 
-    @d.addCallback
-    def ready(protocol):
-        return rename_directory(protocol, s, source, dest)
+    try:
+        yield rename_directory(protocol, s, source, dest)
+    except:
+        log.err()
 
-    d.addCallback(teardown)
-
-    return d
+    yield teardown(protocol)
 
 
 log.startLogging(sys.stdout)
