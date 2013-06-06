@@ -26,12 +26,12 @@ def lookup_and_rename(protocol, s, source, dest):
     def cb(values):
         target = make_target(dest, values, s)
         rename(source, target)
-        return protocol
 
     def eb(e):
         log.msg("File %s not found" % source)
 
     d.addCallbacks(cb, eb)
+    d.addCallback(lambda none: protocol)
 
     return d
 

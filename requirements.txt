@@ -1,2 +1,3 @@
 Parsley
+Twisted>=12.3
 pycrypto

@@ -242,7 +242,7 @@ class AniDBProtocol(DatagramProtocol):
             "ed2k": ed2k,
             "size": size,
             "amask": "c020a040",
-            "fmask": "00c0000000",
+            "fmask": "00c0010000",
             "s": self.session,
         }
 
@@ -260,13 +260,14 @@ class AniDBProtocol(DatagramProtocol):
                 fragments = data.split("\n")[1].split("|")
                 keys = [
                     "fid",
+                    "fext",
                     "size",
                     "ed2k",
-                    "total",
-                    "highest",
+                    "eid_total",
+                    "eid_highest",
                     "series",
-                    "current",
-                    "title",
+                    "eid",
+                    "episode",
                     "group",
                 ]
                 return dict(zip(keys, fragments))
