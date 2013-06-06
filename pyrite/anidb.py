@@ -241,7 +241,7 @@ class AniDBProtocol(DatagramProtocol):
         data = {
             "ed2k": ed2k,
             "size": size,
-            "amask": "c020a040",
+            "amask": "c020c040",
             "fmask": "00c0010000",
             "s": self.session,
         }
@@ -260,9 +260,9 @@ class AniDBProtocol(DatagramProtocol):
                 fragments = data.split("\n")[1].split("|")
                 keys = [
                     "fid",
-                    "fext",
                     "size",
                     "ed2k",
+                    "fext",
                     "eid_total",
                     "eid_highest",
                     "series",
