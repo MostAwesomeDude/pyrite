@@ -62,6 +62,6 @@ def main(reactor, username, password, s, source, dest):
     yield teardown(protocol)
 
 
-log.startLogging(sys.stdout)
-
-react(main, sys.argv[1:])
+def app():
+    log.startLogging(sys.stdout)
+    react(main, sys.argv[1:])
