@@ -1,3 +1,4 @@
+from argparse import ArgumentParser
 import sys
 
 from twisted.internet.defer import inlineCallbacks, returnValue
@@ -62,6 +63,15 @@ def main(reactor, username, password, s, source, dest):
     yield teardown(protocol)
 
 
+def argv_parser():
+    parser = ArgumentParser()
+    parser.add_argument("-n", "--dry-run",
+                        help="Dry run mode (no filesystem changes)",
+                        action="store_true")
+    parser.parse_args()
+
+
 def app():
     log.startLogging(sys.stdout)
+    argv_parser()
     react(main, sys.argv[1:])
