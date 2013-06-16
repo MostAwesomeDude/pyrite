@@ -1,28 +1,17 @@
 from argparse import ArgumentParser
 import sys
 
-from twisted.internet.defer import inlineCallbacks, returnValue
+from twisted.internet.defer import inlineCallbacks
 from twisted.internet.task import react
 from twisted.python import log
 from twisted.python.filepath import FilePath
 
-from pyrite.anidb import make_protocol, make_target, rename
-from pyrite.hashing import size_and_hash
+from pyrite.anidb import make_target, rename
+from pyrite.guru import AniDBGuru
 
 
-@inlineCallbacks
-def setup(reactor, username, password):
-    p = yield make_protocol(reactor)
-
-    yield p.login(username, password)
-    yield p.encoding()
-
-    returnValue(p)
-
-
-def lookup_and_rename(protocol, s, source, dest):
-    data = size_and_hash(source)
-    d = protocol.lookup(*data)
+def lookup_and_rename(guru, s, source, dest):
+    d = guru.lookup(source)
 
     def cb(values):
         target = make_target(dest, values, s)
@@ -32,16 +21,16 @@ def lookup_and_rename(protocol, s, source, dest):
         log.msg("File %s not found" % source)
 
     d.addCallbacks(cb, eb)
-    d.addCallback(lambda none: protocol)
+    d.addCallback(lambda none: guru)
 
     return d
 
 
 @inlineCallbacks
-def rename_directory(protocol, s, source, dest):
+def rename_directory(guru, s, source, dest):
     for path in source.walk():
         if path.isfile():
-            yield lookup_and_rename(protocol, s, path, dest)
+            yield lookup_and_rename(guru, s, path, dest)
 
 
 def teardown(protocol):
@@ -53,14 +42,15 @@ def main(reactor, username, password, s, source, dest):
     source = FilePath(source)
     dest = FilePath(dest)
 
-    protocol = yield setup(reactor, username, password)
+    guru = AniDBGuru()
+    yield guru.start(reactor, username, password)
 
     try:
-        yield rename_directory(protocol, s, source, dest)
+        yield rename_directory(guru, s, source, dest)
     except:
         log.err()
 
-    yield teardown(protocol)
+    yield guru.stop()
 
 
 def argv_parser():
