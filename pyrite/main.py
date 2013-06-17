@@ -28,13 +28,15 @@ def main(reactor, args):
 
 
 def argv_parser():
+    formatter = "{series}/{series} - {eid} - {episode} - [{group}].{fext}"
     parser = ArgumentParser()
     parser.add_argument("-n", "--dry-run",
                         help="Dry run mode (no filesystem changes)",
                         action="store_true")
+    parser.add_argument("-f", "--formatter", help="Formatting string to use",
+                        default=formatter)
     parser.add_argument("username")
     parser.add_argument("password")
-    parser.add_argument("formatter")
     parser.add_argument("source")
     parser.add_argument("dest")
     return parser.parse_args()
