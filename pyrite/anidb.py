@@ -288,30 +288,3 @@ def make_protocol(reactor):
         return protocol
 
     return d
-
-
-def rename(source, target):
-    """
-    Move a file from one location to another, if they aren't the same path.
-    """
-
-    if source != target:
-        if not target.parent().exists():
-            pass
-            target.parent().makedirs()
-        source.moveTo(target)
-        log.msg("Moving %s to %s" % (source, target))
-        return True
-
-    return False
-
-
-def make_target(filepath, data, s):
-    """
-    Extend a filepath with some data and a formatting string.
-    """
-
-    formatted = s.format(**data)
-    for segment in formatted.split("/"):
-        filepath = filepath.child(segment)
-    return filepath
