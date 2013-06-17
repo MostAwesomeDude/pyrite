@@ -16,7 +16,7 @@ def main(reactor, args):
     dest = FilePath(args.dest)
 
     guru = AniDBGuru()
-    namer = Namer(guru, args.formatter, True)
+    namer = Namer(guru, args.formatter, args.dry_run)
     yield guru.start(reactor, args.username, args.password)
 
     try:
