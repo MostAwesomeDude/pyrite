@@ -11,13 +11,13 @@ from pyrite.namer import Namer
 
 
 @inlineCallbacks
-def main(reactor, username, password, s, source, dest):
-    source = FilePath(source)
-    dest = FilePath(dest)
+def main(reactor, args):
+    source = FilePath(args.source)
+    dest = FilePath(args.dest)
 
     guru = AniDBGuru()
-    namer = Namer(guru, s, True)
-    yield guru.start(reactor, username, password)
+    namer = Namer(guru, args.formatter, True)
+    yield guru.start(reactor, args.username, args.password)
 
     try:
         yield namer.rename(source, dest)
@@ -32,10 +32,15 @@ def argv_parser():
     parser.add_argument("-n", "--dry-run",
                         help="Dry run mode (no filesystem changes)",
                         action="store_true")
-    parser.parse_args()
+    parser.add_argument("username")
+    parser.add_argument("password")
+    parser.add_argument("formatter")
+    parser.add_argument("source")
+    parser.add_argument("dest")
+    return parser.parse_args()
 
 
 def app():
     log.startLogging(sys.stdout)
-    argv_parser()
-    react(main, sys.argv[1:])
+    args = argv_parser()
+    react(main, (args,))
