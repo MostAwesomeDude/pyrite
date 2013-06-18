@@ -30,21 +30,22 @@ class Namer(object):
         Move a file from one location to another, if they aren't the same path.
         """
 
+        if source == target:
+            log.msg("%s is already named correctly" % source)
+            return False
+
         if self._dr:
             log.msg("Dry-run; not moving %s to %s" % (source, target))
             return False
 
-        if source != target:
-            if not target.parent().exists():
-                pass
-                target.parent().makedirs()
-            source.moveTo(target)
-            log.msg("Moving %s to %s" % (source, target))
-            return True
-        else:
-            log.msg("%s is already moved" % source)
+        parent = target.parent()
+        if not parent.exists():
+            log.msg("Making directory %s" % parent)
+            parent.makedirs()
+        log.msg("Moving %s to %s" % (source, target))
+        source.moveTo(target)
 
-        return False
+        return True
 
     def _lookup(self, source):
         d = self._g.lookup(source)
