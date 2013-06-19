@@ -66,6 +66,7 @@ class Namer(object):
             for k in data:
                 # Replace all slashes.
                 data[k] = data[k].replace("/", self._slash)
+            return data
 
         def eb(e):
             raise FileNotFound()
