@@ -93,6 +93,7 @@ class AniDBProtocol(DatagramProtocol):
 
         if self.retry:
             self.retry.cancel()
+            self.retry = None
 
         d = self._ds.popleft()
         d.callback(postprocess(packet))
