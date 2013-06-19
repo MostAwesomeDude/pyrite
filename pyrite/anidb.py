@@ -28,7 +28,8 @@ class Trickling(object):
             self.reactor.callLater(target, self.transport.write, packet)
             self.timestamp = current + target
 
-        retry = self.reactor.callLater(target + 10, self.write, packet)
+        retry = self.reactor.callLater(self.timestamp + 10, self.write,
+                                       packet)
         return retry
 
 
