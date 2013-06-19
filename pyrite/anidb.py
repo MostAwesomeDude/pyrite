@@ -28,6 +28,9 @@ class Trickling(object):
             self.reactor.callLater(target, self.transport.write, packet)
             self.timestamp = current + target
 
+        retry = self.reactor.callLater(target + 10, self.write, packet)
+        return retry
+
 
 def pack(d):
     """
@@ -69,6 +72,7 @@ class AniDBProtocol(DatagramProtocol):
     A protocol for communicating with AniDB.
     """
 
+    retry = None
     session = None
     timestamp = 0
 
@@ -85,6 +89,9 @@ class AniDBProtocol(DatagramProtocol):
 
     def datagramReceived(self, packet, remote):
         log.msg("< %r" % packet)
+
+        if self.retry:
+            self.retry.cancel()
 
         d = self._ds.popleft()
         d.callback(postprocess(packet))
@@ -110,9 +117,7 @@ class AniDBProtocol(DatagramProtocol):
         @d.addCallback
         def cb(lock):
             log.msg("> %r" % packet)
-            self.transport.write(packet)
-
-        # XXX set timeout on d
+            self.retry = self.transport.write(packet)
 
         return d
 
