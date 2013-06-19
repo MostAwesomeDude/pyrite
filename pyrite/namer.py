@@ -85,3 +85,5 @@ class Namer(object):
                     yield self._rename(path, target)
                 except FileNotFound:
                     log.msg("File %s not found" % path)
+                except OSError as e:
+                    log.msg("OS error: %s" % e)
