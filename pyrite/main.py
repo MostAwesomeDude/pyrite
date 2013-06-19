@@ -18,14 +18,13 @@ def main(reactor, args):
     guru = AniDBGuru()
     namer = Namer(guru, args.formatter, dry_run=args.dry_run,
                   slash=args.slash)
+
     yield guru.start(reactor, args.username, args.password)
 
     try:
         yield namer.rename(source, dest)
-    except:
-        log.err()
-
-    yield guru.stop()
+    finally:
+        yield guru.stop()
 
 
 def argv_parser():
