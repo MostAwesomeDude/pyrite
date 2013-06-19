@@ -156,6 +156,10 @@ class AniDBProtocol(DatagramProtocol):
             elif code == 500:
                 # LOGIN FAILED
                 raise Exception("Login failed")
+            elif code == 555:
+                # BANNED
+                s = "Banned (API server is butthurt; wait an hour)"
+                raise Exception(s)
 
             return self.session
 
