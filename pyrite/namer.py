@@ -19,11 +19,17 @@ class Namer(object):
     """
 
     _dr = True
+    _slash = "~"
 
-    def __init__(self, guru, formatter, dry_run):
+    def __init__(self, guru, formatter, dry_run=None, slash=None):
         self._g = guru
         self._f = formatter
-        self._dr = dry_run
+
+        if dry_run is not None:
+            self._dr = dry_run
+
+        if slash is not None:
+            self._slash = slash
 
     def _rename(self, source, target):
         """
@@ -50,9 +56,15 @@ class Namer(object):
     def _lookup(self, source):
         d = self._g.lookup(source)
 
-        @d.addErrback
+        def cb(data):
+            for k in data:
+                # Replace all slashes.
+                data[k] = data[k].replace("/", self._slash)
+
         def eb(e):
             log.msg("File %s not found" % source)
+
+        d.addCallbacks(cb, eb)
 
         return d
 

@@ -16,7 +16,8 @@ def main(reactor, args):
     dest = FilePath(args.dest)
 
     guru = AniDBGuru()
-    namer = Namer(guru, args.formatter, args.dry_run)
+    namer = Namer(guru, args.formatter, dry_run=args.dry_run,
+                  slash=args.slash)
     yield guru.start(reactor, args.username, args.password)
 
     try:
@@ -35,6 +36,9 @@ def argv_parser():
                         action="store_true")
     parser.add_argument("-f", "--formatter", help="Formatting string to use",
                         default=formatter)
+    parser.add_argument("-s", "--slash",
+                        help="Character which replaces forward slashes",
+                        default="~")
     parser.add_argument("username")
     parser.add_argument("password")
     parser.add_argument("source")
