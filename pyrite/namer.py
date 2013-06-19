@@ -2,6 +2,12 @@ from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
 
 
+class FileNotFound(Exception):
+    """
+    A file was not found.
+    """
+
+
 def make_target(filepath, data, s):
     """
     Extend a filepath with some data and a formatting string.
@@ -62,7 +68,7 @@ class Namer(object):
                 data[k] = data[k].replace("/", self._slash)
 
         def eb(e):
-            log.msg("File %s not found" % source)
+            raise FileNotFound()
 
         d.addCallbacks(cb, eb)
 
@@ -72,6 +78,9 @@ class Namer(object):
     def rename(self, source, dest):
         for path in source.walk():
             if path.isfile():
-                data = yield self._lookup(path)
-                target = make_target(dest, data, self._f)
-                yield self._rename(path, target)
+                try:
+                    data = yield self._lookup(path)
+                    target = make_target(dest, data, self._f)
+                    yield self._rename(path, target)
+                except FileNotFound:
+                    log.msg("File %s not found" % path)
