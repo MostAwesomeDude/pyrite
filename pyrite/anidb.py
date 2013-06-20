@@ -15,6 +15,8 @@ class Trickling(object):
         self.timestamp = reactor.seconds()
 
     def write(self, packet):
+        log.msg("> %r" % packet)
+
         current = self.reactor.seconds()
         diff = current - self.timestamp
 
@@ -118,7 +120,6 @@ class AniDBProtocol(DatagramProtocol):
         d = self._lock.acquire()
         @d.addCallback
         def cb(lock):
-            log.msg("> %r" % packet)
             self.retry = self.transport.write(packet)
 
         return d
