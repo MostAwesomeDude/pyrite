@@ -65,8 +65,8 @@ def standard_errors(t):
 
     if code == 555:
         # BANNED
-        reason = data.split("\n")[1].strip()
-        raise Exception("Banned: %s" % reason)
+        s = "Banned (API server is butthurt; wait an hour)"
+        raise Exception(s)
 
     return code, data
 
@@ -157,10 +157,6 @@ class AniDBProtocol(DatagramProtocol):
             elif code == 500:
                 # LOGIN FAILED
                 raise Exception("Login failed")
-            elif code == 555:
-                # BANNED
-                s = "Banned (API server is butthurt; wait an hour)"
-                raise Exception(s)
 
             return self.session
 
