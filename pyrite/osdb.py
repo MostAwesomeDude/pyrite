@@ -1,5 +1,8 @@
 from struct import Struct
 
+from twisted.web.xmlrpc import Proxy
+
+
 def checksum(data):
     s = Struct("<Q")
     m = 2 ** 64
@@ -34,6 +37,77 @@ def derphash(handle):
     data = handle.read(64 * 1024)
     i += checksum(data)
 
-    i += handle.tell()
+    size = handle.tell()
+    i += size
 
-    return i % m
+    return "%016x" % (i % m)
+
+
+API = "http://api.opensubtitles.org/xml-rpc"
+
+
+def consider(data):
+    """
+    Determine whether the request should be considered an error even though
+    data was retrieved.
+    """
+
+    status = data["status"]
+    code = status.split()[0]
+
+    if code != "200":
+        raise Exception(status)
+
+    print status, data["seconds"]
+
+    del data["seconds"]
+    del data["status"]
+
+    return data
+
+
+class OSDB(object):
+    """
+    A proxy to OpenSubtitles.
+    """
+
+    token = None
+
+    def __init__(self):
+        self.p = Proxy(API)
+
+    def login(self, username, password):
+        d = self.p.callRemote("LogIn", username, password, "und",
+                              "OS Test User Agent")
+
+        d.addCallback(consider)
+
+        @d.addCallback
+        def cb(data):
+            print "Logged in!"
+            self.token = data["token"]
+
+        return d
+
+    def logout(self):
+        d = self.p.callRemote("LogOut", self.token)
+
+        d.addCallback(consider)
+
+        @d.addCallback
+        def cb(data):
+            print "Logged out!"
+            self.token = None
+
+        return d
+
+    def search(self, derp):
+        d = self.p.callRemote("CheckMovieHash2", self.token, [derp])
+
+        @d.addCallback
+        def cb(data):
+            vs = data["data"].values()
+            # We only want that first result.
+            return vs[0]
+
+        return d
