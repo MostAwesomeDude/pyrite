@@ -17,7 +17,13 @@ class IGuru(Interface):
     A knower of truth and file hashes.
     """
 
-    def identify(filepath):
+    def start(reactor, username, password):
+        pass
+
+    def stop():
+        pass
+
+    def lookup(filepath):
         pass
 
 
