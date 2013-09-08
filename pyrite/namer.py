@@ -75,12 +75,17 @@ class Namer(object):
 
         return d
 
+    def augment(self, data, filepath):
+        root, ext = filepath.splitext()
+        data["ext"] = ext
+
     @inlineCallbacks
     def rename(self, source, dest):
         for path in source.walk():
             if path.isfile():
                 try:
                     data = yield self._lookup(path)
+                    self.augment(data, path)
                     target = make_target(dest, data, self._f)
                     yield self._rename(path, target)
                 except FileNotFound:
