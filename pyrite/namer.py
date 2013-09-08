@@ -77,7 +77,7 @@ class Namer(object):
 
     def augment(self, data, filepath):
         root, ext = filepath.splitext()
-        data["ext"] = ext
+        data["ext"] = ext[1:]
 
     @inlineCallbacks
     def rename(self, source, dest):
