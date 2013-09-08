@@ -6,6 +6,12 @@ from pyrite.osdb import OSDB, derphash
 from pyrite.hashing import size_and_hash
 
 
+class NotLoggedIn(Exception):
+    """
+    Not logged in.
+    """
+
+
 class IGuru(Interface):
     """
     A knower of truth and file hashes.
@@ -36,14 +42,14 @@ class AniDBGuru(object):
                 self._p = None
             return d
 
-        return fail("Not logged in!")
+        return fail(NotLoggedIn())
 
     def lookup(self, filepath):
         if self._p:
             data = size_and_hash(filepath)
             return self._p.lookup(*data)
 
-        return fail("Not logged in!")
+        return fail(NotLoggedIn())
 
 
 class OSDBGuru(object):
@@ -65,17 +71,24 @@ class OSDBGuru(object):
                 self._db = None
             return d
 
-        return fail("Not logged in!")
+        return fail(NotLoggedIn())
 
     def lookup(self, filepath):
         if self._db:
-            derp = derphash(filepath)
+            with filepath.open("rb") as handle:
+                derp = derphash(handle)
             d = self._db.search(derp)
 
             @d.addCallback
             def cb(data):
                 if len(data) > 1:
                     raise Exception("Too many entries")
-                return data[0]
+                data = data[0]
 
-        return fail("Not logged in!")
+                return {
+                    "title": data["MovieName"],
+                }
+
+        return d
+
+        return fail(NotLoggedIn())

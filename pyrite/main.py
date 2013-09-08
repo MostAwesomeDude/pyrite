@@ -6,7 +6,7 @@ from twisted.internet.task import react
 from twisted.python import log
 from twisted.python.filepath import FilePath
 
-from pyrite.guru import AniDBGuru
+from pyrite.guru import AniDBGuru, OSDBGuru
 from pyrite.namer import Namer
 
 
@@ -15,7 +15,7 @@ def main(reactor, args):
     source = FilePath(args.source)
     dest = FilePath(args.dest)
 
-    guru = AniDBGuru()
+    guru = OSDBGuru()
     namer = Namer(guru, args.formatter, dry_run=args.dry_run,
                   slash=args.slash)
 
@@ -46,6 +46,6 @@ def argv_parser():
 
 
 def app():
-    log.startLogging(sys.stdout)
     args = argv_parser()
+    log.startLogging(sys.stdout)
     react(main, (args,))
