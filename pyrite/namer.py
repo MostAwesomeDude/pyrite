@@ -1,11 +1,7 @@
 from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
 
-
-class FileNotFound(Exception):
-    """
-    A file was not found.
-    """
+from pyrite.errors import FileNotFound
 
 
 def make_target(filepath, data, s):
@@ -68,10 +64,7 @@ class Namer(object):
                 data[k] = data[k].replace("/", self._slash)
             return data
 
-        def eb(e):
-            raise FileNotFound()
-
-        d.addCallbacks(cb, eb)
+        d.addCallback(cb)
 
         return d
 

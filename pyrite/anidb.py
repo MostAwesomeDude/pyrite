@@ -5,6 +5,8 @@ from twisted.internet.defer import Deferred, DeferredLock, fail
 from twisted.internet.protocol import DatagramProtocol
 from twisted.python import log
 
+from pyrite.errors import FileNotFound
+
 
 class Trickling(object):
 
@@ -281,7 +283,7 @@ class AniDBProtocol(DatagramProtocol):
                 return dict(zip(keys, fragments))
             elif code == 320:
                 # NO SUCH FILE
-                raise Exception("No such file")
+                raise FileNotFound()
 
         return d
 

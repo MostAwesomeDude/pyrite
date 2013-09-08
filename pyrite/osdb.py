@@ -2,6 +2,8 @@ from struct import Struct
 
 from twisted.web.xmlrpc import Proxy
 
+from pyrite.errors import FileNotFound
+
 
 def checksum(data):
     s = Struct("<Q")
@@ -107,7 +109,11 @@ class OSDB(object):
         @d.addCallback
         def cb(data):
             vs = data["data"].values()
-            # We only want that first result.
-            return vs[0]
+            # We only want that first result. Since we asked for only one
+            # search, we will get either zero or one results.
+            if vs:
+                return vs[0]
+            else:
+                raise FileNotFound()
 
         return d
