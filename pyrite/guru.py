@@ -2,6 +2,7 @@ from twisted.internet.defer import fail, inlineCallbacks
 from zope.interface import Interface, implements
 
 from pyrite.anidb import make_protocol
+from pyrite.errors import FileNotFound
 from pyrite.osdb import OSDB, derphash
 from pyrite.hashing import size_and_hash
 
@@ -81,6 +82,12 @@ class OSDBGuru(object):
 
     def lookup(self, filepath):
         if self._db:
+            # Files shorter than 128KiB will not be in the database. As a
+            # hack, this also prevents files shorter than 64KiB from breaking
+            # the hashing algorithm. Derpy but works.
+            if filepath.getsize() < 128 * 1024:
+                return fail(FileNotFound())
+
             with filepath.open("rb") as handle:
                 derp = derphash(handle)
             d = self._db.search(derp)
