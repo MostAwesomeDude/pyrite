@@ -110,11 +110,11 @@ class OSDB(object):
 
         @d.addCallback
         def cb(data):
-            vs = data["data"].values()
+            vs = data["data"]
             # We only want that first result. Since we asked for only one
             # search, we will get either zero or one results.
             if vs:
-                return vs[0]
+                return vs.values()[0]
             else:
                 raise FileNotFound()
 
