@@ -1,7 +1,7 @@
 from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
 
-from pyrite.errors import FileNotFound
+from pyrite.errors import FileNotFound, MultipleMatches
 
 
 def make_target(filepath, data, s):
@@ -83,5 +83,7 @@ class Namer(object):
                     yield self._rename(path, target)
                 except FileNotFound:
                     log.msg("File %s not found" % path)
+                except MultipleMatches:
+                    log.msg("Can't deal with multiple matches yet")
                 except OSError as e:
                     log.msg("OS error: %s" % e)

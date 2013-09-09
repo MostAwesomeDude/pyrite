@@ -2,7 +2,7 @@ from twisted.internet.defer import fail, inlineCallbacks
 from zope.interface import Interface, implements
 
 from pyrite.anidb import make_protocol
-from pyrite.errors import FileNotFound
+from pyrite.errors import FileNotFound, MultipleMatches
 from pyrite.osdb import OSDB, derphash
 from pyrite.hashing import size_and_hash
 
@@ -95,7 +95,7 @@ class OSDBGuru(object):
             @d.addCallback
             def cb(data):
                 if len(data) > 1:
-                    raise Exception("Too many entries")
+                    raise MultipleMatches()
                 data = data[0]
 
                 return {
