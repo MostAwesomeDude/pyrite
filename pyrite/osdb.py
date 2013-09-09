@@ -106,6 +106,8 @@ class OSDB(object):
     def search(self, derp):
         d = self.p.callRemote("CheckMovieHash2", self.token, [derp])
 
+        d.addCallback(consider)
+
         @d.addCallback
         def cb(data):
             vs = data["data"].values()
