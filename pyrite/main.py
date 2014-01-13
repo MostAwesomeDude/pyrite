@@ -9,13 +9,20 @@ from twisted.python.filepath import FilePath
 from pyrite.guru import AniDBGuru, OSDBGuru
 from pyrite.namer import Namer
 
+gurus = {
+    "anidb": AniDBGuru,
+    "osdb": OSDBGuru,
+}
 
 @inlineCallbacks
 def main(reactor, args):
     source = FilePath(args.source)
     dest = FilePath(args.dest)
 
-    guru = OSDBGuru()
+    if args.guru not in gurus:
+        raise ValueError("Unknown guru: " + args.guru)
+    guru = gurus[args.guru]()
+
     namer = Namer(guru, args.formatter, dry_run=args.dry_run,
                   slash=args.slash)
 
@@ -38,6 +45,7 @@ def argv_parser():
     parser.add_argument("-s", "--slash",
                         help="Character which replaces forward slashes",
                         default="~")
+    parser.add_argument("guru")
     parser.add_argument("username")
     parser.add_argument("password")
     parser.add_argument("source")
