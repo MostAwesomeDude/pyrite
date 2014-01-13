@@ -24,7 +24,7 @@ def main(reactor, args):
     guru = gurus[args.guru]()
 
     namer = Namer(guru, args.formatter, dry_run=args.dry_run,
-                  slash=args.slash)
+                  replace=args.replace, slash=args.slash)
 
     yield guru.start(reactor, args.username, args.password)
 
@@ -39,6 +39,9 @@ def argv_parser():
     parser = ArgumentParser()
     parser.add_argument("-n", "--dry-run",
                         help="Dry run mode (no filesystem changes)",
+                        action="store_true")
+    parser.add_argument("-r", "--replace",
+                        help="Enable replacement of existing files",
                         action="store_true")
     parser.add_argument("-f", "--formatter", help="Formatting string to use",
                         default=formatter)
