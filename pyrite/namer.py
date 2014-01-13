@@ -21,14 +21,19 @@ class Namer(object):
     """
 
     _dr = True
+    _replace = False
     _slash = "~"
 
-    def __init__(self, guru, formatter, dry_run=None, slash=None):
+    def __init__(self, guru, formatter, dry_run=None, replace=None,
+                 slash=None):
         self._g = guru
         self._f = formatter
 
         if dry_run is not None:
             self._dr = dry_run
+
+        if replace is not None:
+            self._replace = replace
 
         if slash is not None:
             self._slash = slash
@@ -40,6 +45,10 @@ class Namer(object):
 
         if source == target:
             log.msg("%s is already named correctly" % source)
+            return False
+
+        if target.exists() and not self._replace:
+            log.msg("Not copying over %s" % target)
             return False
 
         if self._dr:
