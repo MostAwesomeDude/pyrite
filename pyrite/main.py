@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
 import sys
 
 from twisted.internet.defer import inlineCallbacks
@@ -36,7 +36,9 @@ def main(reactor, args):
 
 def argv_parser():
     formatter = "{series}/{series} - {eid} - {episode} - [{group}].{fext}"
-    parser = ArgumentParser()
+    # The formatter_class kwarg changes the parser's help output to include
+    # default information. Helpful, right?
+    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument("-n", "--dry-run",
                         help="Dry run mode (no filesystem changes)",
                         action="store_true")
