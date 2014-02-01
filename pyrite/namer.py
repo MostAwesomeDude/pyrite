@@ -44,22 +44,23 @@ class Namer(object):
         """
 
         if source == target:
-            log.msg("%s is already named correctly" % source)
+            log.msg("%r is already named correctly" % source.path)
             return False
 
         if target.exists() and not self._replace:
-            log.msg("Not copying over %s" % target)
+            log.msg("Not copying over %r" % target.path)
             return False
 
         if self._dr:
-            log.msg("Dry-run; not moving %s to %s" % (source, target))
+            log.msg("Dry-run; not moving %r to %r"
+                    % (source.path, target.path))
             return False
 
         parent = target.parent()
         if not parent.exists():
-            log.msg("Making directory %s" % parent)
+            log.msg("Making directory %r" % parent.path)
             parent.makedirs()
-        log.msg("Moving %s to %s" % (source, target))
+        log.msg("Moving %r to %r" % (source.path, target.path))
         source.moveTo(target)
 
         return True
@@ -91,7 +92,7 @@ class Namer(object):
                     target = make_target(dest, data, self._f)
                     yield self._rename(path, target)
                 except FileNotFound:
-                    log.msg("File %s not found" % path)
+                    log.msg("File %r not found" % path.path)
                 except MultipleMatches:
                     log.msg("Can't deal with multiple matches yet")
                 except OSError as e:
