@@ -56,8 +56,8 @@ def main():
     source = FilePath(args.source)
     dest = FilePath(args.dest)
 
-    namer = Namer(guru, args.formatter, dry_run=args.dry_run,
-                  replace=args.replace, slash=args.slash)
+    namer = Namer(guru, formatter, dry_run=args.dry_run, replace=args.replace,
+                  slash=args.slash)
 
     log.startLogging(sys.stdout)
     react(react_main, (guru, namer, source, dest, args))
