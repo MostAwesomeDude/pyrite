@@ -70,8 +70,11 @@ class Namer(object):
 
         def cb(data):
             for k in data:
-                # Replace all slashes.
-                data[k] = data[k].replace("/", self._slash)
+                # Replace all slashes, skipping non-strings.
+                try:
+                    data[k] = data[k].replace("/", self._slash)
+                except AttributeError:
+                    continue
             return data
 
         d.addCallback(cb)

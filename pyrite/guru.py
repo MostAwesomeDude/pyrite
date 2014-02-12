@@ -108,7 +108,12 @@ class OSDBGuru(object):
                     "MovieYear": "year",
                 }
 
-                return remap_keys(mapping, data)
+                data = remap_keys(mapping, data)
+
+                for k in ("eid", "sid", "year"):
+                    data[k] = int(data[k])
+
+                return data
 
             return d
 
