@@ -280,7 +280,12 @@ class AniDBProtocol(DatagramProtocol):
                     "title",
                     "group",
                 ]
-                return dict(zip(keys, fragments))
+                d = dict(zip(keys, fragments))
+
+                for k in ("eid", "eid_highest", "eid_total", "fid", "size"):
+                    d[k] = int(d[k])
+
+                return d
             elif code == 320:
                 # NO SUCH FILE
                 raise FileNotFound()
