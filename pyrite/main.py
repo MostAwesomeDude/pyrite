@@ -25,13 +25,13 @@ def pick_style(args):
 
     if args.anime:
         guru = "anidb"
-        formatter = "{series}/{series} - {eid} - {episode} - [{group}].{fext}"
+        formatter = "{series}/{series} - {eid:02} - {title} - [{group}].{fext}"
     elif args.movie:
         guru = "osdb"
-        formatter = "{title}.{ext}"
+        formatter = "{title} ({year}).{ext}"
     elif args.tv:
         guru = "osdb"
-        formatter = "{title}.{ext}"
+        formatter = "{sid:02}x{eid:02} - {title}.{ext}"
 
     if not guru:
         print "WARNING: Guru not specified; defaulting to OSDB"
