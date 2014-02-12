@@ -102,6 +102,6 @@ class OSDBGuru(object):
                     "title": data["MovieName"],
                 }
 
-        return d
+            return d
 
         return fail(NotLoggedIn())
