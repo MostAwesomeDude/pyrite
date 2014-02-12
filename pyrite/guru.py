@@ -3,8 +3,9 @@ from zope.interface import Interface, implements
 
 from pyrite.anidb import make_protocol
 from pyrite.errors import FileNotFound, MultipleMatches
-from pyrite.osdb import OSDB, derphash
 from pyrite.hashing import size_and_hash
+from pyrite.helpers import remap_keys
+from pyrite.osdb import OSDB, derphash
 
 
 class NotLoggedIn(Exception):
