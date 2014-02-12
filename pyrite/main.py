@@ -1,4 +1,5 @@
-from argparse import ArgumentDefaultsHelpFormatter, ArgumentParser
+from argparse import (ArgumentDefaultsHelpFormatter,
+                      RawDescriptionHelpFormatter, ArgumentParser)
 import sys
 
 from twisted.internet.defer import inlineCallbacks
@@ -72,10 +73,45 @@ def react_main(reactor, guru, namer, source, dest, args):
         yield guru.stop()
 
 
+formatter_help = """
+Help on Formatters
+------------------
+
+Formatters are standard Python string formatting strings.
+
+Available keys on all gurus (builtin):
+    * ext: Original file extension
+
+Available keys on all gurus (standard):
+    * title: Title of episode or section
+    * eid: Episode number
+
+Additional keys for "osdb":
+    * sid: Season number
+
+Additional keys for "anidb":
+    * series: Name of series
+    * fid: Unique file ID
+    * fext: Actual file extension
+    * eid_total: Total number of episodes
+    * eid_highest: Highest known episode number
+    * group: Name of subtitle or release group
+"""
+
+
+class PyriteFormatter(ArgumentDefaultsHelpFormatter,
+                      RawDescriptionHelpFormatter):
+    """
+    A hack to keep the epilog from being mangled while still making the help
+    nice and pretty.
+    """
+
+
 def argv_parser():
     # The formatter_class kwarg changes the parser's help output to include
     # default information. Helpful, right?
-    parser = ArgumentParser(formatter_class=ArgumentDefaultsHelpFormatter)
+    parser = ArgumentParser(formatter_class=PyriteFormatter,
+                            epilog=formatter_help)
     parser.add_argument("-n", "--dry-run",
                         help="Dry run mode (no filesystem changes)",
                         action="store_true")

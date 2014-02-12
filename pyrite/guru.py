@@ -98,9 +98,16 @@ class OSDBGuru(object):
                     raise MultipleMatches()
                 data = data[0]
 
-                return {
-                    "title": data["MovieName"],
+                # Season and episode IDs will be "0" when movies are looked
+                # up, so remapping them is safe.
+                mapping = {
+                    "SeriesSeason": "sid",
+                    "SeriesEpisode": "eid",
+                    "MovieName": "title",
+                    "MovieYear": "year",
                 }
+
+                return remap_keys(mapping, data)
 
             return d
 

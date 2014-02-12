@@ -79,6 +79,10 @@ class Namer(object):
         return d
 
     def augment(self, data, filepath):
+        """
+        Add file name information from the original file.
+        """
+
         root, ext = filepath.splitext()
         data["ext"] = ext[1:]
 

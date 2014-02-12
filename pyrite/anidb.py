@@ -277,7 +277,7 @@ class AniDBProtocol(DatagramProtocol):
                     "eid_highest",
                     "series",
                     "eid",
-                    "episode",
+                    "title",
                     "group",
                 ]
                 return dict(zip(keys, fragments))
